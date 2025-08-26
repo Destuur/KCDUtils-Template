@@ -8,7 +8,9 @@ including KCDUtils and a ready-to-use workspace.
 - Generates a mod folder with correct structure.
 - Adds a sample Lua file with your mod table.
 - Downloads and integrates KCDUtils.
-- Creates a VS Code workspace with IntelliSense for KCDUtils.
+- Creates a VS Code workspace with IntelliSense for [KCDUtils](https://github.com/Destuur/KCDUtils).
+
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Destuur.kcd-utils-template)
 
 ## Usage
 
