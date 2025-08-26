@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kcd_mod xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<info>
+		<name>{{MODNAME_CLASS}}</name>
+		<description>Guaranteed 100% cumans-free since 1403.</description>
+		<author>One of the dice-playing drunkards at the tavern</author>
+		<version>1.0.0</version>
+		<created_on>{{DATE}}</created_on>
+		<modid>{{MODNAME_FOLDER}}</modid>
+		<modifies_level>false</modifies_level>
+	</info>
+</kcd_mod>
