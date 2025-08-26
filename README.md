@@ -10,6 +10,8 @@ including KCDUtils and a ready-to-use workspace.
 - Downloads and integrates KCDUtils.
 - Creates a VS Code workspace with IntelliSense for KCDUtils.
 
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Destuur.kcd-utils-template)
+
 ## Usage
 
 1. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
