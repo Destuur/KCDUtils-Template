@@ -2,8 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
-
-const unzipper = require('unzipper');
+import unzipper from 'unzipper';
 
 async function downloadAndExtractZip(url: string, destPath: string) {
     const res = await fetch(url);

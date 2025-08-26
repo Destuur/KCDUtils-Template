@@ -4,14 +4,20 @@
   "description": "Creates a Lua mod folder structure with KCDUtils and workspace",
   "version": "1.0.0",
   "publisher": "Destuur",
+  "icon": "images/kcdutils_logo.png",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Destuur/KCDUtils-Template"
+  },
   "main": "./out/extension.js",
   "activationEvents": [
+    "onCommand:kcd-utils-template.createLuaMod"
   ],
   "contributes": {
     "commands": [
@@ -27,16 +33,19 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "node-fetch": "^2.6.9"
+    "node-fetch": "^2.6.9",
+    "unzipper": "^0.12.3"
   },
   "devDependencies": {
     "@types/node": "^20.5.1",
+    "@types/unzipper": "^0.10.11",
     "@types/vscode": "^1.80.0",
     "@vscode/test-electron": "^2.5.2",
     "typescript": "^5.2.2"
   },
   "files": [
     "out/**",
-    "templates/**"
+    "templates/**",
+    "node_modules/**"
   ]
 }
