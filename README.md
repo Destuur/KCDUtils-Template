@@ -1,7 +1,7 @@
 # KCD Utils Template
 
 This VS Code extension creates a Lua mod folder structure for Kingdom Come: Deliverance 2,
-including KCDUtils and a ready-to-use workspace.
+including [KCDUtils](https://github.com/Destuur/KCDUtils) and a ready-to-use workspace.
 
 ## Features
 
