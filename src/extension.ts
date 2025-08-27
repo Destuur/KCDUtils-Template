@@ -32,6 +32,34 @@ async function getLatestReleaseZipUrl(owner: string, repo: string, assetName: st
     return asset.browser_download_url;
 }
 
+function ensureVscodeSettings(folder: string, extraSettings: Record<string, any>) {
+    const vscodePath = path.join(folder, '.vscode');
+    fs.mkdirSync(vscodePath, { recursive: true });
+
+    const settingsFile = path.join(vscodePath, 'settings.json');
+    let settings: Record<string, any> = {};
+
+    if (fs.existsSync(settingsFile)) {
+        try {
+            settings = JSON.parse(fs.readFileSync(settingsFile, 'utf-8'));
+        } catch {
+            // falls JSON fehlerhaft, einfach leeren
+            settings = {};
+        }
+    }
+
+    // Merge neue Settings
+    for (const key in extraSettings) {
+        if (Array.isArray(extraSettings[key])) {
+            if (!Array.isArray(settings[key])) settings[key] = [];
+            settings[key] = Array.from(new Set([...settings[key], ...extraSettings[key]]));
+        } else {
+            settings[key] = extraSettings[key];
+        }
+    }
+
+    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+}
 
 // Variant 1: for folder / Lua file name
 function sanitizeModName(name: string): string {
@@ -133,14 +161,32 @@ export async function activate(context: vscode.ExtensionContext) {
     // ---------------------------
     // Create VS Code settings.json for Lua workspace library
     // ---------------------------
-        const vscodePath = path.join(modFolder, 'Data', modName, '.vscode');
-        fs.mkdirSync(vscodePath, { recursive: true });
-        const settings = {
+
+    //     const vscodePath = path.join(modFolder, 'Data', modName, '.vscode');
+    //     fs.mkdirSync(vscodePath, { recursive: true });
+    //     const settings = {
+    //         "Lua.workspace.library": [
+    //             path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods', 'Utils')
+    //         ],
+    //         "Lua.diagnostics.globals": [ "System", "Script" ]
+    //     };
+    //     fs.writeFileSync(path.join(vscodePath, 'settings.json'), JSON.stringify(settings, null, 2));
+
+        // Für KCDUtils
+        const kcdutilsFolder = path.join(rootPath, '_kcdutils', 'Data', 'kcdutils');
+        ensureVscodeSettings(kcdutilsFolder, {
+            "Lua.diagnostics.globals": ["System", "Script"]
+        });
+
+        // Für den erstellten Mod
+        const modFolderPath = path.join(modFolder, 'Data', modName);
+        ensureVscodeSettings(modFolderPath, {
             "Lua.workspace.library": [
-                path.join(rootPath, 'kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods', 'Utils')
-            ]
-        };
-        fs.writeFileSync(path.join(vscodePath, 'settings.json'), JSON.stringify(settings, null, 2));
+                path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods', 'Utils')
+            ],
+            "Lua.diagnostics.globals": ["System", "Script"]
+        });
+
 
     // ---------------------------
     // Create VS Code workspace file
@@ -150,7 +196,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const workspace = {
             folders: [
                 { path: path.join(modFolder, 'Data', modName) },
-                { path: path.join(rootPath, 'kcdutils', 'Data', 'kcdutils') }
+                { path: path.join(rootPath, '_kcdutils', 'Data', 'kcdutils') }
             ],
             settings: {}
         };
