@@ -5,34 +5,33 @@ import fetch from 'node-fetch';
 import unzipper from 'unzipper';
 
 async function downloadAndExtractZip(url: string, destPath: string) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to fetch zip: ${url}`);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch zip: ${url}`);
 
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const stream = require('stream');
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(buffer);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const stream = require('stream');
+  const bufferStream = new stream.PassThrough();
+  bufferStream.end(buffer);
 
-    await new Promise<void>((resolve, reject) => {
-        bufferStream
-            .pipe(unzipper.Parse())
-            .on('entry', (entry: any) => {
-                // entry.path enthält den Pfad in der ZIP
-                const relativePath = entry.path.replace(/^kcdutils[\\/]/, ''); // optional: obersten Ordner entfernen
-                const targetPath = path.join(destPath, 'kcdutils', relativePath);
-
-                if (entry.type === 'Directory') {
-                    fs.mkdirSync(targetPath, { recursive: true });
-                    entry.autodrain();
-                } else {
-                    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-                    entry.pipe(fs.createWriteStream(targetPath));
-                }
-            })
-            .on('close', resolve)
-            .on('error', reject);
-    });
+  await new Promise<void>((resolve, reject) => {
+    bufferStream
+      .pipe(unzipper.Extract({ path: destPath })) // <- behält _kcdutils/
+      .on('close', resolve)
+      .on('error', reject);
+  });
 }
+
+async function getLatestReleaseZipUrl(owner: string, repo: string, assetName: string): Promise<string> {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`);
+    if (!res.ok) throw new Error(`Failed to fetch latest release info`);
+
+    const data = await res.json();
+    const asset = data.assets.find((a: any) => a.name === assetName);
+    if (!asset) throw new Error(`Asset '${assetName}' not found in latest release`);
+
+    return asset.browser_download_url;
+}
+
 
 // Variant 1: for folder / Lua file name
 function sanitizeModName(name: string): string {
@@ -123,16 +122,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // ---------------------------
     // Download and extract kcdutils folder as ZIP
     // ---------------------------
-    await vscode.window.showInformationMessage('KCDUtils will be downloaded as ZIP and extracted...');
-        try {
-            await downloadAndExtractZip(
-                'https://github.com/Destuur/KCDUtils/releases/download/0.0.1/kcdutils.zip',
-                rootPath
-            );  
-        } catch (err) {
-            vscode.window.showErrorMessage(`Error downloading KCDUtils: ${err}`);
-            return;
-        }
+    try {
+        const url = await getLatestReleaseZipUrl('Destuur', 'KCDUtils', 'kcdutils.zip');
+        await downloadAndExtractZip(url, rootPath);
+    } catch (err) {
+        vscode.window.showErrorMessage(`Error downloading KCDUtils: ${err}`);
+        return;
+    }
 
     // ---------------------------
     // Create VS Code settings.json for Lua workspace library
