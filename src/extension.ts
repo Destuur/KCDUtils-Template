@@ -3,6 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import unzipper from 'unzipper';
+import { exec } from 'child_process';
+import * as util from 'util';
+const execAsync = util.promisify(exec);
 
 async function downloadAndExtractZip(url: string, destPath: string) {
   const res = await fetch(url);
@@ -15,7 +18,7 @@ async function downloadAndExtractZip(url: string, destPath: string) {
 
   await new Promise<void>((resolve, reject) => {
     bufferStream
-      .pipe(unzipper.Extract({ path: destPath })) // <- behält _kcdutils/
+      .pipe(unzipper.Extract({ path: destPath }))
       .on('close', resolve)
       .on('error', reject);
   });
@@ -43,12 +46,10 @@ function ensureVscodeSettings(folder: string, extraSettings: Record<string, any>
         try {
             settings = JSON.parse(fs.readFileSync(settingsFile, 'utf-8'));
         } catch {
-            // falls JSON fehlerhaft, einfach leeren
             settings = {};
         }
     }
 
-    // Merge neue Settings
     for (const key in extraSettings) {
         if (Array.isArray(extraSettings[key])) {
             if (!Array.isArray(settings[key])) settings[key] = [];
@@ -61,19 +62,14 @@ function ensureVscodeSettings(folder: string, extraSettings: Record<string, any>
     fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
 }
 
-// Variant 1: for folder / Lua file name
 function sanitizeModName(name: string): string {
-    // Replace spaces with underscores, make lowercase, allow only a-z and _
     let sanitized = name.replace(/\s+/g, '_').toLowerCase();
     sanitized = sanitized.replace(/[^a-z_]/g, '');
     return sanitized;
 }
 
-// Variant 2: for Lua class / table name
 function modNameToClass(name: string): string {
-    // Remove all special characters and numbers
     let cleaned = name.replace(/[^a-zA-Z\s]/g, '');
-    // Split by spaces and underscores, capitalize each component
     return cleaned
         .split(/[\s_]+/)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -83,116 +79,75 @@ function modNameToClass(name: string): string {
 function getCurrentDate(): string {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Month 0-11 → +1
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    // Register the command for creating a Lua mod template
     let disposable = vscode.commands.registerCommand('kcd-utils-template.createLuaMod', async () => {
 
-    // 1. Select target folder
         const folderUri = await vscode.window.showOpenDialog({ canSelectFolders: true });
         if (!folderUri) return;
         const rootPath = folderUri[0].fsPath;
 
-    // 2. Ask for mod name
         let modNameInput = await vscode.window.showInputBox({ prompt: 'Mod Name / Entry Lua Table Name' });
         if (!modNameInput) return;
 
-    // Sanitize modName
         const modName = sanitizeModName(modNameInput);
         const className = modNameToClass(modNameInput);
 
-    // 3. Check if mod folder already exists
         const modFolder = path.join(rootPath, modName);
         if (fs.existsSync(modFolder)) {
             const overwrite = await vscode.window.showWarningMessage(
-                `Der Ordner '${modName}' existiert bereits. Überschreiben?`,
-                'Ja', 'Nein'
+                `The folder '${modName}' already exists. Overwrite?`,
+                'Yes', 'No'
             );
-            if (overwrite !== 'Ja') return;
+            if (overwrite !== 'Yes') return;
         }
 
-    // ---------------------------
-    // Create modName folder structure
-    // ---------------------------
         const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
         fs.mkdirSync(modScriptsPath, { recursive: true });
 
-    // ---------------------------
-    // Create Lua file from template
-    // ---------------------------
         const luaTemplatePath = context.asAbsolutePath(path.join('templates', 'mod.lua'));
         let luaTemplate = fs.readFileSync(luaTemplatePath, 'utf-8');
-
-    // Replace placeholders in Lua template
         luaTemplate = luaTemplate.replace(/{{MODNAME_CLASS}}/g, className);
         fs.writeFileSync(path.join(modScriptsPath, `${modName}.lua`), luaTemplate);
 
-    // ---------------------------
-    // Create mod.manifest from template
-    // ---------------------------
         const templatePath = context.asAbsolutePath(path.join('templates', 'mod.manifest'));
         let manifestTemplate = fs.readFileSync(templatePath, 'utf-8');
-
-    // Replace placeholders in manifest template
         manifestTemplate = manifestTemplate
             .replace(/{{MODNAME_FOLDER}}/g, modName)
             .replace(/{{MODNAME_CLASS}}/g, className)
             .replace(/{{DATE}}/g, getCurrentDate());
-
         fs.writeFileSync(path.join(modFolder, 'mod.manifest'), manifestTemplate);
-        
 
-    // ---------------------------
-    // Download and extract kcdutils folder as ZIP
-    // ---------------------------
-    try {
-        const url = await getLatestReleaseZipUrl('Destuur', 'KCDUtils', 'kcdutils.zip');
-        await downloadAndExtractZip(url, rootPath);
-    } catch (err) {
-        vscode.window.showErrorMessage(`Error downloading KCDUtils: ${err}`);
-        return;
-    }
+        try {
+            const url = await getLatestReleaseZipUrl('Destuur', 'KCDUtils', 'kcdutils.zip');
+            await downloadAndExtractZip(url, rootPath);
+        } catch (err) {
+            vscode.window.showErrorMessage(`Error downloading KCDUtils: ${err}`);
+            return;
+        }
 
-    // ---------------------------
-    // Create VS Code settings.json for Lua workspace library
-    // ---------------------------
-
-    //     const vscodePath = path.join(modFolder, 'Data', modName, '.vscode');
-    //     fs.mkdirSync(vscodePath, { recursive: true });
-    //     const settings = {
-    //         "Lua.workspace.library": [
-    //             path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods', 'Utils')
-    //         ],
-    //         "Lua.diagnostics.globals": [ "System", "Script" ]
-    //     };
-    //     fs.writeFileSync(path.join(vscodePath, 'settings.json'), JSON.stringify(settings, null, 2));
-
-        // Für KCDUtils
+        // KCDUtils VSCode settings
         const kcdutilsFolder = path.join(rootPath, '_kcdutils', 'Data', 'kcdutils');
         ensureVscodeSettings(kcdutilsFolder, {
             "Lua.diagnostics.globals": ["System", "Script"]
         });
 
-        // Für den erstellten Mod
+        // Mod VSCode settings auf Root-Level (neben .git)
         const modFolderPath = path.join(modFolder, 'Data', modName);
         ensureVscodeSettings(modFolderPath, {
             "Lua.workspace.library": [
-                path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods', 'Utils')
+                path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods')
             ],
             "Lua.diagnostics.globals": ["System", "Script"]
         });
 
-
-    // ---------------------------
-    // Create VS Code workspace file
-    // ---------------------------
-        const workspacePath = path.join(modFolder, 'Data', modName, `${modName}.code-workspace`);
-
+        // Workspace-Datei ebenfalls auf Root-Level
+        const workspacePath = path.join(modFolder, `${modName}.code-workspace`);
         const workspace = {
             folders: [
                 { path: path.join(modFolder, 'Data', modName) },
@@ -200,10 +155,34 @@ export async function activate(context: vscode.ExtensionContext) {
             ],
             settings: {}
         };
-
         fs.writeFileSync(workspacePath, JSON.stringify(workspace, null, 2));
 
-        // 4. Final info message
+        // --- Optional Git Init & Push ---
+        const gitInitAnswer = await vscode.window.showQuickPick(
+            ['Yes', 'No'],
+            { placeHolder: 'Initialize a git repository for this mod and push to GitHub?' }
+        );
+
+        if (gitInitAnswer === 'Yes') {
+            const githubUrl = await vscode.window.showInputBox({ prompt: 'GitHub Repo URL (HTTPS, optional)' });
+            try {
+                await execAsync(`git init`, { cwd: modFolder });
+                await execAsync(`git checkout -b main`, { cwd: modFolder });
+                await execAsync(`git add .`, { cwd: modFolder });
+                await execAsync(`git commit -m "Initial commit"`, { cwd: modFolder });
+
+                if (githubUrl) {
+                    await execAsync(`git remote add origin ${githubUrl}`, { cwd: modFolder });
+                    await execAsync(`git push -u origin main`, { cwd: modFolder });
+                    vscode.window.showInformationMessage('Git repository initialized locally and pushed to GitHub!');
+                } else {
+                    vscode.window.showInformationMessage('Git repository initialized locally (no remote set).');
+                }
+            } catch (err: any) {
+                vscode.window.showErrorMessage(`Git error: ${err.message || err}`);
+            }
+        }
+
         const open = await vscode.window.showInformationMessage(
             `Lua mod '${modName}' with KCDUtils created!`,
             'Open workspace'
