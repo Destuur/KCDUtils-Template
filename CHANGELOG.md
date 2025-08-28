@@ -1,9 +1,9 @@
-# Change Log
+# Changelog
 
-All notable changes to the "kcd-utils-template" extension will be documented in this file.
+## [1.2.0] - 2025-08-29
+### Added
+- New feature: `git init` directly from the extension, with optional automatic push to a remote repository.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+### Changed
+- Default workspace location has been updated.
+- Path for IntelliSense to KCDUtils has been adjusted for better integration.
