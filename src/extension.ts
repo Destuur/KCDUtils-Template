@@ -107,13 +107,30 @@ export async function activate(context: vscode.ExtensionContext) {
             if (overwrite !== 'Yes') return;
         }
 
-        const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
+const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
         fs.mkdirSync(modScriptsPath, { recursive: true });
+
+        // --- create inner folder Scripts/Mods/<modName>/ and ensure it exists ---
+        const modInnerScriptsPath = path.join(modScriptsPath, className);
+        fs.mkdirSync(modInnerScriptsPath, { recursive: true });
 
         const luaTemplatePath = context.asAbsolutePath(path.join('templates', 'mod.lua'));
         let luaTemplate = fs.readFileSync(luaTemplatePath, 'utf-8');
         luaTemplate = luaTemplate.replace(/{{MODNAME_CLASS}}/g, className);
+        // main entry file at Scripts/Mods/<modName>.lua
         fs.writeFileSync(path.join(modScriptsPath, `${modName}.lua`), luaTemplate);
+
+        // --- NEW: copy config.lua template into Scripts/Mods/<modName>/config.lua ---
+        const configTemplatePath = context.asAbsolutePath(path.join('templates', 'config.lua'));
+        if (fs.existsSync(configTemplatePath)) {
+            let configTemplate = fs.readFileSync(configTemplatePath, 'utf-8');
+            configTemplate = configTemplate
+                .replace(/{{MODNAME_FOLDER}}/g, modName)
+                .replace(/{{MODNAME_CLASS}}/g, className);
+            fs.writeFileSync(path.join(modInnerScriptsPath, 'config.lua'), configTemplate);
+        } else {
+            vscode.window.showWarningMessage("config.lua template not found in extension templates folder.");
+        }
 
         const templatePath = context.asAbsolutePath(path.join('templates', 'mod.manifest'));
         let manifestTemplate = fs.readFileSync(templatePath, 'utf-8');
@@ -143,7 +160,7 @@ export async function activate(context: vscode.ExtensionContext) {
             "Lua.workspace.library": [
                 path.join(rootPath, '_kcdutils', 'Data', 'kcdutils', 'Scripts', 'Mods')
             ],
-            "Lua.diagnostics.globals": ["System", "Script"]
+            "Lua.diagnostics.globals": ["System", "Script", "ScriptLoader"]
         });
 
         // Workspace-Datei ebenfalls auf Root-Level

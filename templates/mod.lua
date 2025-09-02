@@ -1,83 +1,77 @@
-{{MODNAME_CLASS}} = {{MODNAME_CLASS}} or {
-    Name = "{{MODNAME_CLASS}}",
-    DB = nil,
-    Logger = nil,
-    Config = nil
-}
+--[[
+    Mod Template for Kingdom Come: Deliverance II
+    Generated with VS Code Extension
 
--- System.LogAlways() because KCDUtils.Logger is not available during initialization
-System.LogAlways("{{MODNAME_CLASS}} initializing...")
+    Mod Name: {{MODNAME_CLASS}}
+    Author: <Your Name Here>
+    Version: 0.1.0
+    Main File: {{MODNAME_CLASS}}.lua
+    Namespace / Table: {{MODNAME_CLASS}}
 
+    Description:
+    This mod was created using the VS Code Modding Template.
+    It automatically integrates with KCDUtils for logging, events, and utilities.
+
+    Dependency:
+    - Requires "KCDUtils" to be installed and loaded before this mod.
+    - When publishing this mod (e.g. Nexus Mods), please mention
+      "KCDUtils" as a dependency in your description/readme.
+
+    Usage (example code):
+        {{MODNAME_CLASS}}.Logger:Info("Hello World from {{MODNAME_CLASS}}!")
+        KCDUtils.Core.Events:RegisterOnGameplayStarted()
+--]]
+
+{{MODNAME_CLASS}} = {{MODNAME_CLASS}} or { Name = "{{MODNAME_CLASS}}" }
+{{MODNAME_CLASS}}.DB, {{MODNAME_CLASS}}.Logger = KCDUtils.RegisterMod({{MODNAME_CLASS}})
+
+
+------------------------------------------------------------
+--- Automatically loads all Lua scripts inside the folder:
+---     Scripts/Mods/{{MODNAME_CLASS}}/
+---
+--- This allows you to split your mod into multiple files
+--- (e.g., config.lua, helpers.lua, features.lua) without
+--- having to require them manually.
+---
+--- Any new .lua file placed in this folder will be loaded
+--- at runtime.
+------------------------------------------------------------
+ScriptLoader.LoadFolder("Scripts/Mods/{{MODNAME_CLASS}}")
+
+
+------------------------------------------------------------
+--- Init is executed once after all scripts of this mod
+--- have been loaded successfully.
+---
+--- Here you can set up your mod, register events, or do
+--- any initialization work.
+---
+--- Note: By calling KCDUtils.Core.Events:RegisterOnGameplayStarted(),
+--- the function {{MODNAME_CLASS}}.OnGameplayStarted will
+--- automatically be subscribed to the "gameplay started"
+--- event and executed when the player enters the game world.
+------------------------------------------------------------
 function {{MODNAME_CLASS}}.Init()
-    --------------------------------------------------------
-    --- KCDUtils - Mod Initialization
-    --------------------------------------------------------
-    KCDUtils.RegisterMod({{MODNAME_CLASS}}.Name)
-    {{MODNAME_CLASS}}.DB = KCDUtils.DB.Factory({{MODNAME_CLASS}}.Name)
-    {{MODNAME_CLASS}}.Logger = KCDUtils.Logger.Factory({{MODNAME_CLASS}}.Name)
-    {{MODNAME_CLASS}}.Config = KCDUtils.Config.Factory({{MODNAME_CLASS}}.Name)
-    {{MODNAME_CLASS}}.Logger:Info("{{MODNAME_CLASS}} initialized")
-
-
-    --------------------------------------------------------
-    --- KCDUtils - Mod Configuration
-    --------------------------------------------------------
-    {{MODNAME_CLASS}}.Config:SetDefaults({                                   -- Sets default values for the configuration
-        SomeSetting = "Default Value",
-        AnotherSetting = 42,
-        YetAnotherSetting = true
-    })
-    {{MODNAME_CLASS}}.Config:Load()                                          -- Loads existing configuration from DB, if DB fails gets values from defaults
-                                                                    -- This ensures that all configuration values are available in `{{MODNAME_CLASS}}.Config.Values`
-    {{MODNAME_CLASS}}.Config:SetAll()                                        -- Sets all configuration values to the DB.
-                                                                    -- The next Config:Load() will get values from the DB
-    for key, value in pairs({{MODNAME_CLASS}}.Config.Values) do              -- Logs all configuration values
-        {{MODNAME_CLASS}}.Logger:Info(key .. ": " .. tostring(value))
-    end
-
-
-    --------------------------------------------------------
-    --- KCDUtils - Mod Logging
-    --------------------------------------------------------
-    {{MODNAME_CLASS}}.Logger:Log("{{MODNAME_CLASS}} configuration defaults set.")
-    {{MODNAME_CLASS}}.Logger:Info("SomeSetting: " .. tostring({{MODNAME_CLASS}}.Config:Get("SomeSetting")))
-    {{MODNAME_CLASS}}.Logger:Warn("This is a warning message.")
-    {{MODNAME_CLASS}}.Logger:Error("This is an error message.")
-    {{MODNAME_CLASS}}.Logger:Log("{{MODNAME_CLASS}} initialization complete.")
-
-    --------------------------------------------------------
-    --- KCDUtils - Mod Events
-    --------------------------------------------------------
-    KCDUtils.Event:DefineEvent("{{MODNAME_CLASS}}Initialized", "Event fired when {{MODNAME_CLASS}} is initialized.")
-    KCDUtils.Event:Subscribe("{{MODNAME_CLASS}}Initialized", {{MODNAME_CLASS}}.OnGameStart, { modName = {{MODNAME_CLASS}}.Name , once = true })
-    KCDUtils.Event:Publish("{{MODNAME_CLASS}}Initialized", { message = "{{MODNAME_CLASS}} has been initialized!" })
-
-
-    --------------------------------------------------------
-    --- KCDUtils - Mod Commands
-    --------------------------------------------------------
-    KCDUtils.Command.Add({{MODNAME_CLASS}}.Name,"TestCommand", "PrintCommmandMessage(%1, %2)", "Prints the first argument")
-
-    local function MyCommand(param1, param2)
-        {{MODNAME_CLASS}}.Logger:Info("P1: " .. tostring(param1) .. ", P2: " .. tostring(param2))
-    end
-    
-    KCDUtils.Command.AddFunction("{{MODNAME_CLASS}}", "TestTwoParams", MyCommand, "Test command with two params")
-    
-
+    {{MODNAME_CLASS}}.Logger:Info("{{MODNAME_CLASS}} initialized.")
+    KCDUtils.Core.Events:RegisterOnGameplayStarted()
 end
 
--- KCDUtils - Mod Events
-function {{MODNAME_CLASS}}.OnGameStart()
-    {{MODNAME_CLASS}}.Logger:Log("Game started - OnGameStart event triggered.")
-    KCDUtils.Event:Publish("{{MODNAME_CLASS}}GameStarted", { message = "{{MODNAME_CLASS}} has started the game!" })
-    KCDUtils.Event:ListEventsByMod({{MODNAME_CLASS}}.Name)
-end
 
--- KCDUtils - Mod Commands
-function PrintCommmandMessage(msg1, msg2)
-    {{MODNAME_CLASS}}.Logger:Info(msg1)
-    {{MODNAME_CLASS}}.Logger:Info(msg2)
+------------------------------------------------------------
+--- OnGameplayStarted is triggered once the game world
+--- has fully loaded and the player is in control.
+---
+--- Use this for tasks that require the world to exist
+--- (UI modifications, spawning, world state changes, 
+--- timers and everything player related).
+---
+--- In this template, it hides the current tutorial and
+--- shows a new one as an example.
+------------------------------------------------------------
+function {{MODNAME_CLASS}}.OnGameplayStarted()
+    KCDUtils.UI.HideCurrentTutorial()
+    KCDUtils.UI.ShowTutorial("{{MODNAME_CLASS}} Tutorial")
 end
 
 
@@ -97,6 +91,5 @@ end
 --- #                                                      #
 --- ########################################################
 ------------------------------------------------------------
-
 
 {{MODNAME_CLASS}}.Init()
