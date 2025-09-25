@@ -1,95 +1,125 @@
---[[
+-- {{MODNAME_CLASS}}.lua (alles in einer Datei)
+--[[ 
     Mod Template for Kingdom Come: Deliverance II
     Generated with VS Code Extension
 
     Mod Name: {{MODNAME_CLASS}}
     Author: <Your Name Here>
     Version: 0.1.0
-    Main File: {{MODNAME_CLASS}}.lua
     Namespace / Table: {{MODNAME_CLASS}}
-
-    Description:
-    This mod was created using the VS Code Modding Template.
-    It automatically integrates with KCDUtils for logging, events, and utilities.
-
-    Dependency:
-    - Requires "KCDUtils" to be installed and loaded before this mod.
-    - When publishing this mod (e.g. Nexus Mods), please mention
-      "KCDUtils" as a dependency in your description/readme.
-
-    Usage (example code):
-        {{MODNAME_CLASS}}.Logger:Info("Hello World from {{MODNAME_CLASS}}!")
-        KCDUtils.Core.Events:RegisterOnGameplayStarted()
+    Description: Template mod integrating with KCDUtils for config, menu, and events.
 --]]
 
-{{MODNAME_CLASS}} = {{MODNAME_CLASS}} or { Name = "{{MODNAME_CLASS}}" }
-{{MODNAME_CLASS}}.DB, {{MODNAME_CLASS}}.Logger = KCDUtils.RegisterMod({{MODNAME_CLASS}})
-
-
 ------------------------------------------------------------
---- Automatically loads all Lua scripts inside the folder:
----     Scripts/Mods/{{MODNAME_CLASS}}/
----
---- This allows you to split your mod into multiple files
---- (e.g., config.lua, helpers.lua, features.lua) without
---- having to require them manually.
----
---- Any new .lua file placed in this folder will be loaded
---- at runtime.
+-- Register the mod with KCDUtils
+-- Creates the namespace/table {{MODNAME_CLASS}} and initializes
+-- Logger, DB, Config, Events, and other utilities
 ------------------------------------------------------------
-ScriptLoader.LoadFolder("Scripts/Mods/{{MODNAME_CLASS}}")
-
+local mod = KCDUtils.RegisterMod({ Name = "{{MODNAME_FOLDER}}" })
 
 ------------------------------------------------------------
---- Init is executed once after all scripts of this mod
---- have been loaded successfully.
----
---- Here you can set up your mod, register events, or do
---- any initialization work.
----
---- Note: By calling KCDUtils.Core.Events:RegisterOnGameplayStarted(),
---- the function {{MODNAME_CLASS}}.OnGameplayStarted will
---- automatically be subscribed to the "gameplay started"
---- event and executed when the player enters the game world.
+-- Default in-game configuration
+-- Add your mod-specific settings here
 ------------------------------------------------------------
-function {{MODNAME_CLASS}}.Init()
-    {{MODNAME_CLASS}}.Logger:Info("{{MODNAME_CLASS}} initialized.")
-    KCDUtils.Core.Events:RegisterOnGameplayStarted()
+mod.Config = {
+    firstSetting  = false,       -- Example boolean setting
+    secondSetting = 5,           -- Example numeric setting
+    thirdSetting  = "option1"    -- Example choice/string setting
+}
+
+------------------------------------------------------------
+-- Menu configuration for KCDUtils menu system
+-- Supports "value" and "choice" types, with optional valueMap
+-- for boolean/string mapping
+------------------------------------------------------------
+local menuConfig = {
+    {
+        key       = "firstSetting",
+        type      = "choice",
+        choices   = {"No","Yes"},
+        valueMap  = {false,true},
+        default   = mod.Config.firstSetting,
+        tooltip   = "Enable/disable first setting"
+    },
+    {
+        key       = "secondSetting",
+        type      = "value",
+        min       = 1,
+        max       = 10,
+        default   = mod.Config.secondSetting,
+        tooltip   = "Set second setting"
+    },
+    {
+        key       = "thirdSetting",
+        type      = "choice",
+        choices   = {"option1","option2","option3"},
+        valueMap  = {"option1","option2","option3"},
+        default   = mod.Config.thirdSetting,
+        tooltip   = "Choose third setting"
+    }
+}
+KCDUtils.Menu.RegisterMod(mod, menuConfig)
+
+------------------------------------------------------------
+-- Shortcuts for easier access to Logger, DB, and Config
+------------------------------------------------------------
+local log    = mod.Logger
+local db     = mod.DB
+local config = mod.Config
+
+------------------------------------------------------------
+-- Event triggered whenever the in-game configuration menu changes
+-- Updates internal config and persists values via KCDUtils
+------------------------------------------------------------
+mod.On.MenuChanged = function(newConfig)
+    for k, cfg in pairs(newConfig) do
+        if cfg._selectedIndex then
+            config[k] = cfg.valueMap[cfg._selectedIndex + 1]
+        else
+            config[k] = cfg.value
+        end
+    end
+    KCDUtils.Config.SaveAll(mod.Name, config)
 end
 
-
 ------------------------------------------------------------
---- OnGameplayStarted is triggered once the game world
---- has fully loaded and the player is in control.
----
---- Use this for tasks that require the world to exist
---- (UI modifications, spawning, world state changes, 
---- timers and everything player related).
----
---- In this template, it hides the current tutorial and
---- shows a new one as an example.
+-- Event triggered when gameplay starts
+-- The player is fully in control at this point
 ------------------------------------------------------------
-function {{MODNAME_CLASS}}.OnGameplayStarted()
-    KCDUtils.UI.HideCurrentTutorial()
-    KCDUtils.UI.ShowTutorial("{{MODNAME_CLASS}} Tutorial")
+mod.OnGameplayStarted = function()
+    KCDUtils.Config.LoadFromDB(mod.Name, config)
+    KCDUtils.UI.ShowNotification("{{MODNAME_CLASS}} initialized!")
 end
 
+------------------------------------------------------------
+--- Example console command function
+--- This can be bound via KCD2Keybinders using the annotations below.
+------------------------------------------------------------
+local function exampleFunction()
+    KCDUtils.UI.ShowReputationGained("KCDUtils approves!")
+end
 
 ------------------------------------------------------------
----  Kingdom Come: Deliverance II - Modding Template
----  Written by Destuur (not sponsored by Sir Radzig)
----
----  Disclaimer: No horses, villagers, or bathmaids
----  were harmed in the making of this code.
----
----  Remember: If it breaks, blame the Cumans.
+--- Binding annotations for KCD2 Keybinder integration
+--- -@bindingCommand defines the console command string 
+---   that should be mapped to a keybind.
+--- -@bindingMap specifies the context in which the keybind
+---   will be active (e.g. movement, player, ui).
+------------------------------------------------------------
+--- @bindingCommand {{MODNAME_FOLDER}}_your_command
+--- @bindingMap movement
+KCDUtils.Command.AddFunction("{{MODNAME_FOLDER}}", "your_command", exampleFunction, "Message on entering command in console.")
+
 ------------------------------------------------------------
 --- ########################################################
 --- #                                                      #
---- #           Your Code Starts Here, brave scribe!       #
---- #   May your stamina never drain mid swordfight :)     #
+--- #               Your Code Ends Here                   #
 --- #                                                      #
 --- ########################################################
 ------------------------------------------------------------
 
-{{MODNAME_CLASS}}.Init()
+------------------------------------------------------------
+-- Export globally (optional)
+-- Makes the mod accessible from other scripts
+------------------------------------------------------------
+{{MODNAME_CLASS}} = mod

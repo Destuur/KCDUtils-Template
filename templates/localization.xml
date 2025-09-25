@@ -1,0 +1,106 @@
+<Table>
+    <!-- Mod name represented in menus and settings -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}</Cell>
+        <Cell>{{MODNAME_CLASS}}</Cell>
+        <Cell>Mod Template</Cell>
+    </Row>
+
+    <!-- Mod settings -->
+    <!-- Header -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_settings</Cell>
+        <Cell>{{MODNAME_CLASS}} Settings</Cell>
+        <Cell>Mod Template Settings</Cell>
+    </Row>
+
+    <!-- Settings: Param 1 -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_firstSetting</Cell>
+        <Cell>First Setting</Cell>
+        <Cell>First setting description</Cell>
+    </Row>
+    <!-- Settings: Param 1 Tooltip -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_firstSetting_tooltip</Cell>
+        <Cell>Nice tooltip, bro</Cell>
+        <Cell>Friendly tooltip for first setting</Cell>
+    </Row>
+
+    <!-- Settings: Param 2 -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_secondSetting</Cell>
+        <Cell>Second Setting</Cell>
+        <Cell>Second setting description</Cell>
+    </Row>
+    <!-- Settings: Param 2 Tooltip -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_secondSetting_tooltip</Cell>
+        <Cell>Nice tooltip, bro</Cell>
+        <Cell>Warning: using this might make Henry scream dramatically!</Cell>
+    </Row>
+
+    <!-- Settings: Param 3 with options -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_thirdSetting</Cell>
+        <Cell>Third Setting</Cell>
+        <Cell>Third setting description</Cell>
+    </Row>
+    <!-- Settings: Param 3 Tooltip -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_thirdSetting_tooltip</Cell>
+        <Cell>Creative text</Cell>
+        <Cell>Who reads this now knows Henry secretly trained a donkey.</Cell>
+    </Row>
+    <!-- Settings: Param 3 Options -->
+    <!-- Option 1 -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_thirdSetting_1</Cell>
+        <Cell>Option 1</Cell>
+        <Cell>Option 1</Cell>
+    </Row>
+    <!-- Option 2 -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_thirdSetting_2</Cell>
+        <Cell>Option 2</Cell>
+        <Cell>Option 2</Cell>
+    </Row>
+    <!-- Option 3 -->
+    <Row>
+        <Cell>ui_{{MODNAME_FOLDER}}_thirdSetting_3</Cell>
+        <Cell>Option 3</Cell>
+        <Cell>Option 3</Cell>
+    </Row>
+
+    <!-- Keybinds -->
+    <!-- Sub header in keybind settings -->
+    <Row>
+        <Cell>ui_keybinds_group_{{MODNAME_FOLDER}}</Cell>
+        <Cell>{{MODNAME_CLASS}}</Cell>
+        <Cell>Mod Template</Cell>
+    </Row>
+    <!-- Command Keybind title -->
+    <Row>
+        <Cell>ui_keybinds_{{MODNAME_FOLDER}}_your_command</Cell>
+        <Cell>Button Press</Cell>
+        <Cell>Press the button</Cell>
+    </Row>
+
+    <!-- UI Notifications and Tutorials -->
+    <Row>
+        <Cell>ui_keybind_{{MODNAME_FOLDER}}_stuff</Cell>
+        <Cell>Notification Text on command/button press</Cell>
+        <Cell>Well done! A button was pressed, but watch out for villagers!</Cell>
+    </Row>
+    <Row>
+        <Cell>ui_notification_{{MODNAME_FOLDER}}_loaded</Cell>
+        <Cell>Mod initiated</Cell>
+        <Cell>{{MODNAME_CLASS}} successfully loaded! Henry is ready for adventures and potions.</Cell>
+    </Row>
+    <Row>
+        <Cell>ui_tutorial_{{MODNAME_FOLDER}}_49oE</Cell>
+        <Cell>&lt;headicon&gt;&lt;imgicon src='items/loot_flute'/&gt;Toggle Feature&lt;/headicon&gt;&lt;body&gt;Activate or deactivate the mod feature while in-game. {Press $hw_toggle;|Hold $xi_hw_toggle^;} to toggle the functionality.&lt;/body&gt;&lt;body&gt;Use it as needed while exploring the world.&lt;/body&gt;</Cell>
+        <Cell>&lt;headicon&gt;&lt;imgicon src='items/loot_flute'/&gt;Toggle Feature&lt;/headicon&gt;&lt;body&gt;Activate or deactivate the mod feature while in-game. {Press $hw_toggle;|Hold $xi_hw_toggle^;} to toggle the functionality.&lt;/body&gt;&lt;body&gt;Enjoy experimenting with the mod safely.&lt;/body&gt;</Cell>
+    </Row>
+
+</Table>

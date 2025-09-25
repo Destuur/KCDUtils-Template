@@ -116,20 +116,30 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
 
         const luaTemplatePath = context.asAbsolutePath(path.join('templates', 'mod.lua'));
         let luaTemplate = fs.readFileSync(luaTemplatePath, 'utf-8');
-        luaTemplate = luaTemplate.replace(/{{MODNAME_CLASS}}/g, className);
+        luaTemplate = luaTemplate
+            .replace(/{{MODNAME_CLASS}}/g, className)
+            .replace(/{{MODNAME_FOLDER}}/g, modName);
         // main entry file at Scripts/Mods/<modName>.lua
         fs.writeFileSync(path.join(modScriptsPath, `${modName}.lua`), luaTemplate);
 
-        // --- NEW: copy config.lua template into Scripts/Mods/<modName>/config.lua ---
-        const configTemplatePath = context.asAbsolutePath(path.join('templates', 'config.lua'));
-        if (fs.existsSync(configTemplatePath)) {
-            let configTemplate = fs.readFileSync(configTemplatePath, 'utf-8');
-            configTemplate = configTemplate
+        const localizationPath = path.join(modFolder, 'Localization', 'English_xml');
+        fs.mkdirSync(localizationPath, { recursive: true });
+
+        const xmlTemplatePath = context.asAbsolutePath(path.join('templates', 'localization.xml'));
+        if (fs.existsSync(xmlTemplatePath)) {
+            let xmlTemplate = fs.readFileSync(xmlTemplatePath, 'utf-8');
+
+            // Ersetze Platzhalter
+            xmlTemplate = xmlTemplate
                 .replace(/{{MODNAME_FOLDER}}/g, modName)
                 .replace(/{{MODNAME_CLASS}}/g, className);
-            fs.writeFileSync(path.join(modInnerScriptsPath, 'config.lua'), configTemplate);
+
+            fs.writeFileSync(
+                path.join(localizationPath, `text_${modName}.xml`),
+                xmlTemplate
+            );
         } else {
-            vscode.window.showWarningMessage("config.lua template not found in extension templates folder.");
+            vscode.window.showWarningMessage("localization.xml template not found in extension templates folder.");
         }
 
         const templatePath = context.asAbsolutePath(path.join('templates', 'mod.manifest'));
@@ -151,7 +161,7 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
         // KCDUtils VSCode settings
         const kcdutilsFolder = path.join(rootPath, '_kcdutils', 'Data', 'kcdutils');
         ensureVscodeSettings(kcdutilsFolder, {
-            "Lua.diagnostics.globals": ["System", "Script"]
+            "Lua.diagnostics.globals": ["System", "Script", "ScriptLoader"]
         });
 
         // Mod VSCode settings auf Root-Level (neben .git)
