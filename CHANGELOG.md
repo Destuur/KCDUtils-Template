@@ -12,6 +12,7 @@
 - New `ConfigMethods` namespace for clean handling of config:
   - `Load()`, `Save()`, `Dump()` methods to interact with the database and console/log.
 - Updated example console command function demonstrating KCDUtils.UI usage with keybinding support.
+- Everything split up in different files for more structure.
 
 ### Changed
 - Template now ensures all Lua files in `{{MODNAME_CLASS}}` folder and subfolders are loaded automatically on mod registration.
