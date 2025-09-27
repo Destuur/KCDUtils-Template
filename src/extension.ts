@@ -88,15 +88,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand('kcd-utils-template.createLuaMod', async () => {
 
+        // --- Ordner auswählen ---
         const folderUri = await vscode.window.showOpenDialog({ canSelectFolders: true });
         if (!folderUri) return;
         const rootPath = folderUri[0].fsPath;
 
+        // --- Mod Name / Table Name abfragen ---
         let modNameInput = await vscode.window.showInputBox({ prompt: 'Mod Name / Entry Lua Table Name' });
         if (!modNameInput) return;
 
-        const modName = sanitizeModName(modNameInput);
-        const className = modNameToClass(modNameInput);
+        const modName = sanitizeModName(modNameInput); // für Folder / Datei
+        const className = modNameToClass(modNameInput); // für Lua Table / Klasse
 
         const modFolder = path.join(rootPath, modName);
         if (fs.existsSync(modFolder)) {
@@ -107,49 +109,73 @@ export async function activate(context: vscode.ExtensionContext) {
             if (overwrite !== 'Yes') return;
         }
 
-const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
+        // --- Ordnerstruktur erstellen ---
+        const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
         fs.mkdirSync(modScriptsPath, { recursive: true });
 
-        // --- create inner folder Scripts/Mods/<modName>/ and ensure it exists ---
+        // <ModName> Ordner für Hauptdateien
         const modInnerScriptsPath = path.join(modScriptsPath, className);
         fs.mkdirSync(modInnerScriptsPath, { recursive: true });
 
+        // --- mod.lua erstellen ---
         const luaTemplatePath = context.asAbsolutePath(path.join('templates', 'mod.lua'));
         let luaTemplate = fs.readFileSync(luaTemplatePath, 'utf-8');
         luaTemplate = luaTemplate
             .replace(/{{MODNAME_CLASS}}/g, className)
             .replace(/{{MODNAME_FOLDER}}/g, modName);
-        // main entry file at Scripts/Mods/<modName>.lua
         fs.writeFileSync(path.join(modScriptsPath, `${modName}.lua`), luaTemplate);
 
+        // --- Haupt-Mod-Dateien erstellen: main.lua, config.lua, command.lua ---
+        const templateFiles = [
+            { name: 'main.lua', template: 'main.lua' },
+            { name: 'config.lua', template: 'config.lua' },
+            { name: 'command.lua', template: 'command.lua' }
+        ];
+
+        for (const file of templateFiles) {
+            const templatePath = context.asAbsolutePath(path.join('templates', file.template));
+            if (!fs.existsSync(templatePath)) {
+                vscode.window.showWarningMessage(`Template ${file.template} not found in extension templates folder.`);
+                continue;
+            }
+
+            let content = fs.readFileSync(templatePath, 'utf-8');
+            content = content
+                .replace(/{{MODNAME_CLASS}}/g, className)
+                .replace(/{{MODNAME_FOLDER}}/g, modName);
+
+            fs.writeFileSync(path.join(modInnerScriptsPath, file.name), content);
+        }
+
+        // --- Localization erstellen ---
         const localizationPath = path.join(modFolder, 'Localization', 'English_xml');
         fs.mkdirSync(localizationPath, { recursive: true });
 
         const xmlTemplatePath = context.asAbsolutePath(path.join('templates', 'localization.xml'));
         if (fs.existsSync(xmlTemplatePath)) {
             let xmlTemplate = fs.readFileSync(xmlTemplatePath, 'utf-8');
-
-            // Ersetze Platzhalter
             xmlTemplate = xmlTemplate
                 .replace(/{{MODNAME_FOLDER}}/g, modName)
                 .replace(/{{MODNAME_CLASS}}/g, className);
 
             fs.writeFileSync(
-                path.join(localizationPath, `text_${modName}.xml`),
+                path.join(localizationPath, `text__${modName}.xml`),
                 xmlTemplate
             );
         } else {
             vscode.window.showWarningMessage("localization.xml template not found in extension templates folder.");
         }
 
-        const templatePath = context.asAbsolutePath(path.join('templates', 'mod.manifest'));
-        let manifestTemplate = fs.readFileSync(templatePath, 'utf-8');
+        // --- mod.manifest erstellen ---
+        const manifestPath = context.asAbsolutePath(path.join('templates', 'mod.manifest'));
+        let manifestTemplate = fs.readFileSync(manifestPath, 'utf-8');
         manifestTemplate = manifestTemplate
             .replace(/{{MODNAME_FOLDER}}/g, modName)
             .replace(/{{MODNAME_CLASS}}/g, className)
             .replace(/{{DATE}}/g, getCurrentDate());
         fs.writeFileSync(path.join(modFolder, 'mod.manifest'), manifestTemplate);
 
+        // --- KCDUtils herunterladen & entpacken ---
         try {
             const url = await getLatestReleaseZipUrl('Destuur', 'KCDUtils', 'kcdutils.zip');
             await downloadAndExtractZip(url, rootPath);
@@ -158,13 +184,13 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
             return;
         }
 
-        // KCDUtils VSCode settings
+        // --- VSCode settings für KCDUtils ---
         const kcdutilsFolder = path.join(rootPath, '_kcdutils', 'Data', 'kcdutils');
         ensureVscodeSettings(kcdutilsFolder, {
             "Lua.diagnostics.globals": ["System", "Script", "ScriptLoader"]
         });
 
-        // Mod VSCode settings auf Root-Level (neben .git)
+        // --- Mod VSCode settings ---
         const modFolderPath = path.join(modFolder, 'Data', modName);
         ensureVscodeSettings(modFolderPath, {
             "Lua.workspace.library": [
@@ -173,7 +199,7 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
             "Lua.diagnostics.globals": ["System", "Script", "ScriptLoader"]
         });
 
-        // Workspace-Datei ebenfalls auf Root-Level
+        // --- Workspace-Datei ---
         const workspacePath = path.join(modFolder, `${modName}.code-workspace`);
         const workspace = {
             folders: [
@@ -184,7 +210,7 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
         };
         fs.writeFileSync(workspacePath, JSON.stringify(workspace, null, 2));
 
-        // --- Optional Git Init & Push ---
+        // --- Git Init & Push optional ---
         const gitInitAnswer = await vscode.window.showQuickPick(
             ['Yes', 'No'],
             { placeHolder: 'Initialize a git repository for this mod and push to GitHub?' }
@@ -210,6 +236,7 @@ const modScriptsPath = path.join(modFolder, 'Data', modName, 'Scripts', 'Mods');
             }
         }
 
+        // --- Open Workspace Option ---
         const open = await vscode.window.showInformationMessage(
             `Lua mod '${modName}' with KCDUtils created!`,
             'Open workspace'

@@ -81,14 +81,14 @@
     </Row>
     <!-- Command Keybind title -->
     <Row>
-        <Cell>ui_keybinds_{{MODNAME_FOLDER}}_your_command</Cell>
+        <Cell>ui_keybind_{{MODNAME_FOLDER}}_your_command</Cell>
         <Cell>Button Press</Cell>
         <Cell>Press the button</Cell>
     </Row>
 
     <!-- UI Notifications and Tutorials -->
     <Row>
-        <Cell>ui_keybind_{{MODNAME_FOLDER}}_stuff</Cell>
+        <Cell>ui_keybind_{{MODNAME_FOLDER}}_your_command</Cell>
         <Cell>Notification Text on command/button press</Cell>
         <Cell>Well done! A button was pressed, but watch out for villagers!</Cell>
     </Row>
@@ -96,6 +96,16 @@
         <Cell>ui_notification_{{MODNAME_FOLDER}}_loaded</Cell>
         <Cell>Mod initiated</Cell>
         <Cell>{{MODNAME_CLASS}} successfully loaded! Henry is ready for adventures and potions.</Cell>
+    </Row>
+    <Row>
+        <Cell>ui_notification_{{MODNAME_FOLDER}}_exampleCommand</Cell>
+        <Cell>Mod initiated</Cell>
+        <Cell>KCDUtils used!</Cell>
+    </Row>
+    <Row>
+        <Cell>ui_notification_{{MODNAME_FOLDER}}_resetCommand</Cell>
+        <Cell>Configuration Reset</Cell>
+        <Cell>Configuration reset to defaults</Cell>
     </Row>
     <Row>
         <Cell>ui_tutorial_{{MODNAME_FOLDER}}_49oE</Cell>
